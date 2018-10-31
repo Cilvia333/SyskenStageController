@@ -1,6 +1,6 @@
 <template lang="pug">
     .controller
-        h1 SYSKEN STAGE LIGHTING CONTROLLER CLIENT v1.0.0 2018
+        h1 SYSKEN STAGE LIGHTING CONTROLLER CLIENT v1.0.0
         .controller-color
             h2 Color
             .controller-color-tab
@@ -14,10 +14,9 @@
                     input(type="range")
                 .controller-color-point-hsv(v-else)
                     h4 HSV mode
+                    input.hue(type="range")
                     input(type="range")
                     input(type="range")
-                    input(type="range")
-                
             .controller-color-rainbow(v-else)
                 h3 Rainbow Color
                 h4 Rotation Speed
@@ -36,6 +35,7 @@
         .controller-output
             h2 Output
             .controller-output-now
+            input.controller-output-ip(type="text")
 
 </template>
 
@@ -44,7 +44,7 @@
     data: function () {
       return {
         colorMode: 'point',
-        colorTypeMode: 'rgb'
+        colorTypeMode: 'hsv'
       }
     },
     methods: {
@@ -65,6 +65,11 @@
 html{
     font-size: 65.8%;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body{
+    margin:0;
+    overflow: hidden;
 }
 
 h1{
@@ -96,6 +101,12 @@ h4{
     min-height:100vh;
     grid-template-rows: 10vh 45vh 45vh;
     grid-template-columns: 70vw 1fr;
+    background: #222;
+    *{
+        color:white;
+    }
+    margin:0;
+    padding:10px 30px;
 }
 
 h1{
@@ -128,6 +139,52 @@ input[type="range"]{
     height:auto;
 }
 
+.controller-color-point-hsv{
+    .hue{
+        background: -moz-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+        background: -ms-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+        background: -o-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+        background: -webkit-gradient(90deg, left top, left bottom, from(#ff0000), color-stop(0.17, #ffff00), color-stop(0.33, #00ff00), color-stop(0.5, #00ffff), color-stop(0.67, #0000ff), color-stop(0.83, #ff00ff), to(#ff0000));
+        background: -webkit-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+        background: linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+    }
+}
+
+input[type="range"] {
+    width: 500px;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    margin: 5px;
+    width:  150px;
+    height: 10px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    background: white;
+    border: white solid 1px;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    position: relative;
+    width: 20px;
+    height: 20px;
+    -moz-border-radius: 50%;
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    z-index: 20;
+}
+
+[type="range"]:focus,
+[type="range"]:focus::-webkit-slider-thumb,
+[type="range"]:active,
+[type="range"]:active::-webkit-slider-thumb {
+    outline: none;
+}
+
 .controller-color-now{
     width:100px;
     height:100px;
@@ -139,5 +196,19 @@ input[type="range"]{
     height:100px;
     background: #383983;
 }
+
+.controller-output-ip{
+    color:#222;
+    background: #eee;
+    border:solid 1px #ccc;
+    -webkit-border-radius: 3px;
+    -moz-border-radius: 3px;
+    border-radius: 3px;
+
+    &:focus{
+        border:solid 1px rgb(42, 184, 240);
+    }
+}
+
 
 </style>
