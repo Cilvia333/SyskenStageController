@@ -14,9 +14,10 @@
                     input(type="range")
                 .controller-color-point-hsv(v-else)
                     h4 HSV mode
-                    input.hue(type="range")
-                    input(type="range")
-                    input(type="range")
+                    .controller-color-point-hsv-slider
+                        input.hue(type="range")
+                        input(type="range")
+                        input(type="range")
             .controller-color-rainbow(v-else)
                 h3 Rainbow Color
                 h4 Rotation Speed
@@ -134,23 +135,9 @@ h1{
     grid-column: 2;
 }
 
-input[type="range"]{
-    transform: rotate(-90deg);
-    height:auto;
-}
-
-.controller-color-point-hsv{
-    .hue{
-        background: -moz-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
-        background: -ms-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
-        background: -o-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
-        background: -webkit-gradient(90deg, left top, left bottom, from(#ff0000), color-stop(0.17, #ffff00), color-stop(0.33, #00ff00), color-stop(0.5, #00ffff), color-stop(0.67, #0000ff), color-stop(0.83, #ff00ff), to(#ff0000));
-        background: -webkit-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
-        background: linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
-    }
-}
 
 input[type="range"] {
+    transform: rotate(-90deg);
     width: 500px;
     -moz-appearance: none;
     -webkit-appearance: none;
@@ -169,7 +156,6 @@ input[type="range"]::-webkit-slider-thumb {
     -moz-appearance: none;
     -webkit-appearance: none;
     cursor: pointer;
-    position: relative;
     width: 20px;
     height: 20px;
     -moz-border-radius: 50%;
@@ -184,6 +170,39 @@ input[type="range"]::-webkit-slider-thumb {
 [type="range"]:active::-webkit-slider-thumb {
     outline: none;
 }
+
+.controller-color-point-hsv{
+}
+
+.controller-color-point-hsv-slider{
+    position: absolute;
+    left:10vw;
+    input{
+        display: block;
+        position: absolute;
+        margin:10px;
+        padding:0;
+        &:nth-child(1){
+            left:0;
+        }
+        &:nth-child(2){
+            left:40px;
+        }
+        &:nth-child(3){
+            left:80px;
+        }
+    }
+
+    .hue{
+        background: -moz-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+        background: -ms-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+        background: -o-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+        background: -webkit-gradient(90deg, left top, left bottom, from(#ff0000), color-stop(0.17, #ffff00), color-stop(0.33, #00ff00), color-stop(0.5, #00ffff), color-stop(0.67, #0000ff), color-stop(0.83, #ff00ff), to(#ff0000));
+        background: -webkit-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+        background: linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+    }
+}
+
 
 .controller-color-now{
     width:100px;
