@@ -171,9 +171,6 @@ input[type="range"]::-webkit-slider-thumb {
     outline: none;
 }
 
-.controller-color-point-hsv{
-}
-
 .controller-color-point-hsv-slider{
     position: absolute;
     left:10vw;
