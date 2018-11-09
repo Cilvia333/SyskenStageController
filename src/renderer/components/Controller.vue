@@ -3,40 +3,53 @@
         h1 SYSKEN STAGE LIGHTING CONTROLLER CLIENT v1.0.0
         .controller-color
             h2 Color
-            .controller-color-tab
-
-            .controller-color-point(v-if="colorMode === 'point'")
+            .controller-color-point(:style="{border: nowPointModeStyle}" @click="clickSetPoint")
                 h3 Point Color
-                .controller-color-point-rgb(v-if="colorTypeMode === 'rgb'")
-                    h4 RGB mode
-                    input(type="range")
-                    input(type="range")
-                    input(type="range")
-                .controller-color-point-hsv(v-else)
+                .controller-color-point-hsv
                     h4 HSV mode
-                    .controller-color-point-hsv-slider
-                        input.hue(type="range")
-                        input(type="range")
-                        input(type="range")
-            .controller-color-rainbow(v-else)
+                    .controller-color-point-hsv-h
+                        input.hue-slider(type="range" min="0" max="360" step="1" value="0" v-model="hue" )
+                        input.hue-text(type="text" v-model="hue")
+                    .controller-color-point-hsv-s
+                        input.sat-slider(type="range" min="0" max="1.0" step="0.001" value="1.0" v-model="sat" )
+                        input.sat-text(type="text" v-model="sat")
+                    .controller-color-point-hsv-v
+                        input.val-slider(type="range" min="0" max="1.0" step="0.001" value="128" v-model="val" )
+                        input.val-text(type="text" v-model="val")
+            .controller-color-rainbow(:style="{border: nowRainbowModeStyle}" @click="clickSetRainbow")
                 h3 Rainbow Color
-                h4 Rotation Speed
-                input(type="range")
-            .controller-color-now
+                .controller-color-rainbow-roll
+                    h4 Rotation Speed
+                    input(type="range" min="-5.0" max="5.0" step="0.01" value="1.0" v-model="rotateSpeed")
+                    input.val-text(type="text" v-model="rotateSpeed")
+            .controller-color-now(:style="{background: nowColorSytle}")
         .controller-pattern
             h2 Pattern
-            input.controller-pattern-speed(type="range")
-            button.controller-pattern-beat Beat
-            button.controller-pattern-bress Bress
-            button.controller-pattern-pulse Pulse
-            button.controller-pattern-triangle Triangle
+            .controller-pattern-bpm
+              h3 BPM
+              input.controller-pattern-bpm-slider(type="range" min="60" max="240" step="1" value="120" v-model="bpm")
+              input.controller-pattern-bpm-text(type="text" v-model="bpm")
+              button(:class="{'button-active': isActiveBM1}" @click="clickBPMMulti(1)") x1
+              button(:class="{'button-active': isActiveBM2}" @click="clickBPMMulti(2)") x2
+              button(:class="{'button-active': isActiveBM4}" @click="clickBPMMulti(4)") x4
+              button(:class="{'button-active': isActiveBM8}" @click="clickBPMMulti(8)") x8
+            .controller-pattern-mode
+              h3 Mode
+              button.controller-pattern-beat(:class="{'button-active': isAcvitiveBeat}" @click="clickPatternMode('beat')") Beat
+              button.controller-pattern-breath(:class="{'button-active': isAcvitiveBreath}" @click="clickPatternMode('breath')") Bress
+              button.controller-pattern-pulse(:class="{'button-active': isAcvitivePulse}" @click="clickPatternMode('pulse')") Pulse
+              button.controller-pattern-triangle(:class="{'button-active': isAcvitiveTriangle}" @click="clickPatternMode('triangle')") Triangle
+              button.controller-pattern-none(:class="{'button-active': isAcvitiveNone}" @click="clickPatternMode('none')") None
         .controller-luminosity
             h2 Luminosity
-            input(type="range")
+            input.luminosity-slider(type="range" min="0" max="1" step="0.01" value="1.0" v-model="luminosity")
+            input.luminosity-text(type="text" v-model="luminosity")
         .controller-output
             h2 Output
-            .controller-output-now
-            input.controller-output-ip(type="text")
+            .controller-output-address
+              h3 address( send ip, port )
+              input.controller-output-ip(type="text" v-model="ip")
+              input.controller-output-port(type="text" v-model="port")
 
 </template>
 
@@ -45,16 +58,185 @@
     data: function () {
       return {
         colorMode: 'point',
-        colorTypeMode: 'hsv'
+        hue: 0,
+        sat: 1.0,
+        val: 1.0,
+        hex: '#ffffff',
+        rotateSpeed: 1.0,
+        bpm: 128,
+        bpmMultiply: 1,
+        patternMode: 'none',
+        luminosity: 1.0,
+        ip: '128.0.0.1',
+        port: 8000
       }
     },
-    methods: {
-      changeColorMode () {
-        if (this.colorMode === 'rgb') {
-          this.colorMode = 'hsv'
-        } else {
-          this.colorMode = 'rgb'
+    watch: {
+      hue: function () { this.changeColor() },
+      sat: function () { this.changeColor() },
+      val: function () { this.changeColor() },
+      colorMode: function () { this.changeColorMode() },
+      rotateSpeed: function () { this.changeRotateSpeed() },
+      bpm: function () { this.changeBPM() },
+      luminosity: function () { this.changeLuminosity() }
+    },
+    computed: {
+      nowColorSytle: function () {
+        if (this.colorMode === 'point') {
+          var R, G, B;
+          [R, G, B] = this.hsv2rgb(this.hue, this.sat, this.val)
+          return 'rgb(' + R + ', ' + G + ', ' + B + ')'
         }
+        return 'linear-gradient(-45deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)'
+      },
+      nowPointModeStyle: function () {
+        if (this.colorMode === 'point') {
+          return 'white solid 1px'
+        }
+        return 'none'
+      },
+      nowRainbowModeStyle: function () {
+        if (this.colorMode === 'rainbow') {
+          return 'white solid 1px'
+        }
+        return 'none'
+      },
+      isAcvitiveBeat: function () { return this.patternMode === 'beat' },
+      isAcvitiveBreath: function () { return this.patternMode === 'breath' },
+      isAcvitivePulse: function () { return this.patternMode === 'pulse' },
+      isAcvitiveTriangle: function () { return this.patternMode === 'triangle' },
+      isAcvitiveNone: function () { return this.patternMode === 'none' },
+      isActiveBM1: function () { return this.bpmMultiply === 1 },
+      isActiveBM2: function () { return this.bpmMultiply === 2 },
+      isActiveBM4: function () { return this.bpmMultiply === 4 },
+      isActiveBM8: function () { return this.bpmMultiply === 8 }
+    },
+    methods: {
+      clickSetPoint () {
+        this.colorMode = 'point'
+      },
+      clickSetRainbow () {
+        this.colorMode = 'rainbow'
+      },
+      clickPatternMode (pattern) {
+        this.patternMode = pattern
+        this.sendPattern(pattern)
+      },
+      clickBPMMulti (bpmMultiply) {
+        this.bpmMultiply = bpmMultiply
+        this.sendBPM(this.bpm * this.bpmMultiply)
+      },
+      changeColorMode () {
+        this.sendColorMode()
+      },
+      changeColor () {
+        var R, G, B;
+        [R, G, B] = this.hsv2rgb(this.hue, this.sat, this.val)
+        this.sendColor(R, G, B)
+      },
+      changeRotateSpeed () {
+        this.sendRotateSpeed(this.rotateSpeed)
+      },
+      changeBPM () {
+        this.sendBPM(this.bpm * this.bpmMultiply)
+      },
+      changeLuminosity () {
+        this.sendLuminosity(this.luminosity)
+      },
+      sendColorMode () {
+        var osc = require('node-osc')
+        var oscClient = new osc.Client(this.ip, this.port)
+        var SendMsg = new osc.Message('/color-mode')
+        SendMsg.append(this.colorMode)
+        oscClient.send(SendMsg)
+        oscClient.kill()
+        console.log('ColorMode sended')
+      },
+      sendColor (r, g, b) {
+        var osc = require('node-osc')
+        var oscClient = new osc.Client(this.ip, this.port)
+        var SendMsg = new osc.Message('/color')
+        SendMsg.append(r)
+        SendMsg.append(g)
+        SendMsg.append(b)
+        oscClient.send(SendMsg)
+        oscClient.kill()
+        console.log('Color sended')
+      },
+      sendRotateSpeed (rotateSpeed) {
+        var osc = require('node-osc')
+        var oscClient = new osc.Client(this.ip, this.port)
+        var SendMsg = new osc.Message('/rainbow-role-speed')
+        SendMsg.append(rotateSpeed)
+        oscClient.send(SendMsg)
+        oscClient.kill()
+        console.log('rotate sended')
+      },
+      sendBPM (bpm) {
+        var osc = require('node-osc')
+        var oscClient = new osc.Client(this.ip, this.port)
+        var SendMsg = new osc.Message('/bpm')
+        SendMsg.append(bpm)
+        oscClient.send(SendMsg)
+        oscClient.kill()
+        console.log('BPM sended')
+      },
+      sendPattern (pattern) {
+        var osc = require('node-osc')
+        var oscClient = new osc.Client(this.ip, this.port)
+        var SendMsg = new osc.Message('/pattern')
+        SendMsg.append(pattern)
+        oscClient.send(SendMsg)
+        oscClient.kill()
+        console.log('Pattern sended')
+      },
+      sendLuminosity (luminosity) {
+        var osc = require('node-osc')
+        var oscClient = new osc.Client(this.ip, this.port)
+        var SendMsg = new osc.Message('/luminosity')
+        SendMsg.append(luminosity)
+        oscClient.send(SendMsg)
+        oscClient.kill()
+        console.log('Luminosity sended')
+      },
+      hsv2rgb (h, s, v) {
+        var C = v * s
+        var Hp = h / 60
+        var X = C * (1 - Math.abs(Hp % 2 - 1))
+
+        var R, G, B
+        if (Hp >= 0 && Hp < 1) {
+          [R, G, B] = [C, X, 0]
+        };
+
+        if (Hp >= 1 && Hp < 2) {
+          [R, G, B] = [X, C, 0]
+        };
+
+        if (Hp >= 2 && Hp < 3) {
+          [R, G, B] = [0, C, X]
+        };
+
+        if (Hp >= 3 && Hp < 4) {
+          [R, G, B] = [0, X, C]
+        };
+
+        if (Hp >= 4 && Hp < 5) {
+          [R, G, B] = [X, 0, C]
+        };
+
+        if (Hp >= 5 && Hp < 6) {
+          [R, G, B] = [C, 0, X]
+        };
+
+        var m = v - C;
+        [R, G, B] = [R + m, G + m, B + m]
+
+        R = Math.floor(R * 255)
+        G = Math.floor(G * 255)
+        B = Math.floor(B * 255)
+
+        return [R, G, B]
       }
     }
   }
@@ -100,8 +282,8 @@ h4{
 .controller{
     display: grid;
     min-height:100vh;
-    grid-template-rows: 10vh 45vh 45vh;
-    grid-template-columns: 70vw 1fr;
+    grid-template-rows: 10vh 60vh 30vh;
+    grid-template-columns: 75vw 1fr;
     background: #222;
     *{
         color:white;
@@ -135,15 +317,79 @@ h1{
     grid-column: 2;
 }
 
+input[type="range"]{
+    //transform: rotate(-90deg);
+    height:auto;
+}
+input[type="text"]{
+    //transform: rotate(-90deg);
+    height:auto;
+    color:#222;
+    text-align: right;
+}
+
+.controller-color{
+    display: inline-block;
+    vertical-align: middle;
+    width:100%;
+    height:100%;
+}
+
+.controller-color-point{
+    width:70%;
+}
+
+.controller-color-rainbow{
+    width:70%;
+}
+
+.controller-color-point-hsv{
+    display:inline-block;
+    vertical-align: middle;
+    width:100%;
+    height:100%;
+    margin-left:20px;
+
+    .hue-slider{
+        background: -moz-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+        background: -ms-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+        background: -o-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+        background: -webkit-gradient(90deg, left top, left bottom, from(#ff0000), color-stop(0.17, #ffff00), color-stop(0.33, #00ff00), color-stop(0.5, #00ffff), color-stop(0.67, #0000ff), color-stop(0.83, #ff00ff), to(#ff0000));
+        background: -webkit-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+        background: linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+    }
+
+    input[type="range"]{
+        margin-right:30px;
+    }
+    input[type="text"]{
+        width:50px;
+    }
+}
+
+.controller-color-rainbow-roll{
+    display:inline-block;
+    vertical-align: middle;
+    width:100%;
+    height:100%;
+    margin-left:20px;
+    input[type="range"]{
+        display:inline-block;
+        margin-right:30px;
+    }
+    input[type="text"]{
+        display:inline-block;
+        width:50px;
+    }
+}
+
 
 input[type="range"] {
-    transform: rotate(-90deg);
-    width: 500px;
     -moz-appearance: none;
     -webkit-appearance: none;
     cursor: pointer;
     margin: 5px;
-    width:  150px;
+    width:  200px;
     height: 10px;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
@@ -204,27 +450,67 @@ input[type="range"]::-webkit-slider-thumb {
 .controller-color-now{
     width:100px;
     height:100px;
-    background: #383983;
 }
 
-.controller-output-now{
-    width:100px;
-    height:100px;
-    background: #383983;
+.controller-color-now[data-state="rainbow"]{
+    background: -moz-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+    background: -ms-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+    background: -o-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+    background: -webkit-gradient(90deg, left top, left bottom, from(#ff0000), color-stop(0.17, #ffff00), color-stop(0.33, #00ff00), color-stop(0.5, #00ffff), color-stop(0.67, #0000ff), color-stop(0.83, #ff00ff), to(#ff0000));
+    background: -webkit-linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+    background: linear-gradient(90deg, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+    
 }
 
-.controller-output-ip{
+.controller-pattern-bpm{
+  margin-left: 20px;
+  button{
+    color:black;
+  }
+}
+
+.controller-pattern-bpm-slider{
+  margin-right: 50px;
+}
+
+.controller-pattern-bpm-text{
+  width:50px;
+  margin-right:20px;
+}
+
+.controller-pattern-mode{
+  margin-left: 20px;
+  button{
+    color:black;
+  }
+}
+
+.controller-output{
+  display: inline;
+}
+
+.controller-output-address{
+  display: block;
+  input{
     color:#222;
     background: #eee;
     border:solid 1px #ccc;
     -webkit-border-radius: 3px;
     -moz-border-radius: 3px;
     border-radius: 3px;
+    width:70px;
 
     &:focus{
         border:solid 1px rgb(42, 184, 240);
     }
+  }
 }
 
+button{
+  background:white;
+}
 
+.button-active{
+  background: rgb(228, 162, 20);
+}
 </style>
