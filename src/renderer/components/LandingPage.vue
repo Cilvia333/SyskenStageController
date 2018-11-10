@@ -39,6 +39,10 @@
       open (link) {
         this.$electron.shell.openExternal(link)
       }
+    },
+    mounted () {
+      console.log('mounted')
+      this.$electron.ipcRenderer.send('send-osc', Math.random())
     }
   }
 </script>

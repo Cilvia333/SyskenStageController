@@ -1,7 +1,8 @@
 'use strict'
 
-import { app, BrowserWindow } from 'electron'
-
+import { app, ipcMain, BrowserWindow } from 'electron'
+var osc = require('node-osc')
+var oscClient = new osc.Client('127.0.0.1', 6700)
 /**
  * Set `__static` path to static files in production
  * https://simulatedgreg.gitbooks.io/electron-vue/content/en/using-static-assets.html
@@ -37,6 +38,7 @@ app.on('ready', createWindow)
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
+    oscClient.kill()
     app.quit()
   }
 })
@@ -45,6 +47,18 @@ app.on('activate', () => {
   if (mainWindow === null) {
     createWindow()
   }
+})
+
+ipcMain.on('send-osc', (event, address, data) => {
+  var sendMsg = new osc.Message(address)
+  data.forEach(value => {
+    sendMsg.append(value)
+  })
+  oscClient.send(sendMsg)
+})
+
+ipcMain.on('change-address', (event, ip, port) => {
+  oscClient = new osc.Client(ip, port)
 })
 
 /**

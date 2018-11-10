@@ -1,6 +1,6 @@
 <template lang="pug">
     .controller
-        h1 SYSKEN STAGE LIGHTING CONTROLLER CLIENT v1.0.0
+        h1 STAGE LIGHTING CONTROL CLIENT v1.0.0
         .controller-color
             h2 Color
             .controller-color-point(:style="{border: nowPointModeStyle}" @click="clickSetPoint")
@@ -71,6 +71,9 @@
         port: 8000
       }
     },
+    mounted () {
+      this.sendAddress(this.ip, this.port)
+    },
     watch: {
       hue: function () { this.changeColor() },
       sat: function () { this.changeColor() },
@@ -78,7 +81,9 @@
       colorMode: function () { this.changeColorMode() },
       rotateSpeed: function () { this.changeRotateSpeed() },
       bpm: function () { this.changeBPM() },
-      luminosity: function () { this.changeLuminosity() }
+      luminosity: function () { this.changeLuminosity() },
+      ip: function () { this.changeAddress() },
+      port: function () { this.changeAddress() }
     },
     computed: {
       nowColorSytle: function () {
@@ -143,60 +148,31 @@
       changeLuminosity () {
         this.sendLuminosity(this.luminosity)
       },
+      changeAddress () {
+        this.sendAddress(this.ip, this.port)
+      },
       sendColorMode () {
-        var osc = require('node-osc')
-        var oscClient = new osc.Client(this.ip, this.port)
-        var SendMsg = new osc.Message('/color-mode')
-        SendMsg.append(this.colorMode)
-        oscClient.send(SendMsg)
-        oscClient.kill()
+        this.sendOsc('/color-mode', [this.colorMode])
         console.log('ColorMode sended')
       },
       sendColor (r, g, b) {
-        var osc = require('node-osc')
-        var oscClient = new osc.Client(this.ip, this.port)
-        var SendMsg = new osc.Message('/color')
-        SendMsg.append(r)
-        SendMsg.append(g)
-        SendMsg.append(b)
-        oscClient.send(SendMsg)
-        oscClient.kill()
+        this.sendOsc('/color', [r, g, b])
         console.log('Color sended')
       },
       sendRotateSpeed (rotateSpeed) {
-        var osc = require('node-osc')
-        var oscClient = new osc.Client(this.ip, this.port)
-        var SendMsg = new osc.Message('/rainbow-role-speed')
-        SendMsg.append(rotateSpeed)
-        oscClient.send(SendMsg)
-        oscClient.kill()
+        this.sendOsc('/rainbow-role-speed', [rotateSpeed])
         console.log('rotate sended')
       },
       sendBPM (bpm) {
-        var osc = require('node-osc')
-        var oscClient = new osc.Client(this.ip, this.port)
-        var SendMsg = new osc.Message('/bpm')
-        SendMsg.append(bpm)
-        oscClient.send(SendMsg)
-        oscClient.kill()
+        this.sendOsc('/bpm', [bpm])
         console.log('BPM sended')
       },
       sendPattern (pattern) {
-        var osc = require('node-osc')
-        var oscClient = new osc.Client(this.ip, this.port)
-        var SendMsg = new osc.Message('/pattern')
-        SendMsg.append(pattern)
-        oscClient.send(SendMsg)
-        oscClient.kill()
+        this.sendOsc('/pattern', [pattern])
         console.log('Pattern sended')
       },
       sendLuminosity (luminosity) {
-        var osc = require('node-osc')
-        var oscClient = new osc.Client(this.ip, this.port)
-        var SendMsg = new osc.Message('/luminosity')
-        SendMsg.append(luminosity)
-        oscClient.send(SendMsg)
-        oscClient.kill()
+        this.sendOsc('/luminosity', [luminosity])
         console.log('Luminosity sended')
       },
       hsv2rgb (h, s, v) {
@@ -237,6 +213,14 @@
         B = Math.floor(B * 255)
 
         return [R, G, B]
+      },
+      sendOsc (address, data) {
+        this.$electron.ipcRenderer.send('send-osc', address, data)
+      },
+      sendAddress (ip, port) {
+        this.$electron.ipcRenderer.send('change-address', ip, port)
+        console.log('Success Changing Address')
+        console.log(ip, port)
       }
     }
   }
